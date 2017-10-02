@@ -23,7 +23,7 @@ namespace GridMaster
         public Vector3 startNodePosition;
         public Vector3 endNodePosition;
 
-        public int agents;
+        public int agents = 1;
 
         void Start()
         {
@@ -120,7 +120,7 @@ namespace GridMaster
                 n.worldObject.SetActive(false);
             }
 
-            Debug.Log("Agent Complete.");
+            //Debug.Log("Agent Complete.");
         }
 
         public Node GetNode(int x, int y, int z)
