@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using GridMaster;
 
+//for more on A* visit
+//https://en.wikipedia.org/wiki/A*_search_algorithm
 namespace Pathfinding
 {
     public class Pathfinder
@@ -15,6 +17,7 @@ namespace Pathfinding
         PathfindMaster.PathfindingJobComplete completeCallback;
         List<Node> foundPath;
 
+        //Constructor
         public Pathfinder(Node start, Node target, PathfindMaster.PathfindingJobComplete callback)
         {
             startPosition = start;
@@ -32,7 +35,7 @@ namespace Pathfinding
 
         public void NotifyComplete()
         {
-            if(completeCallback != null)
+            if (completeCallback != null)
             {
                 completeCallback(foundPath);
             }
@@ -40,27 +43,30 @@ namespace Pathfinding
 
         private List<Node> FindPathActual(Node start, Node target)
         {
-            //Typical A* algorythm...
+            //Typical A* algorythm from here and on
+
             List<Node> foundPath = new List<Node>();
 
-            //We need two lists, one for the nodes we need to check, and one for nodes we've already checked.
+            //We need two lists, one for the nodes we need to check and one for the nodes we've already checked
             List<Node> openSet = new List<Node>();
             HashSet<Node> closedSet = new HashSet<Node>();
 
+            //We start adding to the open set
             openSet.Add(start);
 
-            while(openSet.Count > 0)
+            while (openSet.Count > 0)
             {
                 Node currentNode = openSet[0];
 
                 for (int i = 0; i < openSet.Count; i++)
                 {
-                    //We check the costs for the current node. More is possible but not important now.
-                    if(openSet[i].fCost < currentNode.fCost ||
+                    //We check the costs for the current node
+                    //You can have more opt. here but that's not important now
+                    if (openSet[i].fCost < currentNode.fCost ||
                         (openSet[i].fCost == currentNode.fCost &&
                         openSet[i].hCost < currentNode.hCost))
                     {
-                        //We assign a new current node.
+                        //and then we assign a new current node
                         if (!currentNode.Equals(openSet[i]))
                         {
                             currentNode = openSet[i];
@@ -68,72 +74,70 @@ namespace Pathfinding
                     }
                 }
 
-                //We remove the current node from the open set and add to the closed set.
+                //we remove the current node from the open set and add to the closed set
                 openSet.Remove(currentNode);
                 closedSet.Add(currentNode);
 
-                //If our current node is the target node...
+                //if the current node is the target node
                 if (currentNode.Equals(target))
                 {
-                    //We've found our destination, it's time to trace our path.
+                    //that means we reached our destination, so we are ready to retrace our path
                     foundPath = RetracePath(start, currentNode);
                     break;
                 }
 
-                //If we haven't reached the target, we need to start looking at the neighbors.
-                foreach (Node neighbor in GetNeighbors(currentNode, true))
+                //if we haven't reached our target, then we need to start looking the neighbours
+                foreach (Node neighbour in GetNeighbours(currentNode, true))
                 {
-                    if (!closedSet.Contains(neighbor))
+                    if (!closedSet.Contains(neighbour))
                     {
-                        //We create a new movement cost for our neighbors
-                        float newMovementCostToNeighbor = currentNode.gCost + GetDistance(currentNode, neighbor);
+                        //we create a new movement cost for our neighbours
+                        float newMovementCostToNeighbour = currentNode.gCost + GetDistance(currentNode, neighbour);
 
-                        //And if it is lower than the neighbor's cost...
-                        if(newMovementCostToNeighbor < neighbor.gCost || !openSet.Contains(neighbor))
+                        //and if it's lower than the neighbour's cost
+                        if (newMovementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                         {
-                            //We allocate new costs
-                            neighbor.gCost = newMovementCostToNeighbor;
-                            neighbor.hCost = GetDistance(neighbor, target);
-
+                            //we calculate the new costs
+                            neighbour.gCost = newMovementCostToNeighbour;
+                            neighbour.hCost = GetDistance(neighbour, target);
                             //Assign the parent node
-                            neighbor.parentNode = currentNode;
-
-                            //And add the neighbor node to the open set
-                            if (!openSet.Contains(neighbor))
+                            neighbour.parentNode = currentNode;
+                            //And add the neighbour node to the open set
+                            if (!openSet.Contains(neighbour))
                             {
-                                openSet.Add(neighbor);
+                                openSet.Add(neighbour);
                             }
                         }
                     }
                 }
             }
 
-            //We return the path at the end.
+            //we return the path at the end
             return foundPath;
         }
 
         private List<Node> RetracePath(Node startNode, Node endNode)
         {
-            //Go from endNode to startNode...
+            //Retrace the path, is basically going from the endNode to the startNode
             List<Node> path = new List<Node>();
             Node currentNode = endNode;
 
-            while(currentNode != startNode)
+            while (currentNode != startNode)
             {
                 path.Add(currentNode);
-                //by using the parentNodes we assigned earlier!
+                //by taking the parentNodes we assigned
                 currentNode = currentNode.parentNode;
             }
 
-            //And then reverse the list.
+            //then we simply reverse the list
             path.Reverse();
 
             return path;
         }
 
-        private List<Node> GetNeighbors(Node node, bool getVerticalNeighbors = false)
+        private List<Node> GetNeighbours(Node node, bool getVerticalneighbours = false)
         {
-            //This is where we start getting our neighbors
+            //This is were we start taking our neighbours
             List<Node> retList = new List<Node>();
 
             for (int x = -1; x <= 1; x++)
@@ -144,28 +148,28 @@ namespace Pathfinding
                     {
                         int y = yIndex;
 
-                        //If we don't want 3d A*, then don't search the y!!!
-                        if(!getVerticalNeighbors)
+                        //If we don't want a 3d A*, then we don't search the y
+                        if (!getVerticalneighbours)
                         {
                             y = 0;
                         }
 
-                        if(x == 0 && y == 0 && z == 0)
+                        if (x == 0 && y == 0 && z == 0)
                         {
-                            //0,0,0 is current node.
+                            //000 is the current node
                         }
                         else
                         {
                             Node searchPos = new Node();
 
-                            //The nodes we want are what's forwards/back, left/righgt, up/down from us.
+                            //the nodes we want are what's forward/backwars,left/righ,up/down from us
                             searchPos.x = node.x + x;
                             searchPos.y = node.y + y;
                             searchPos.z = node.z + z;
 
-                            Node newNode = GetNeighborNode(searchPos, true, node);
+                            Node newNode = GetNeighbourNode(searchPos, true, node);
 
-                            if(newNode != null)
+                            if (newNode != null)
                             {
                                 retList.Add(newNode);
                             }
@@ -175,78 +179,76 @@ namespace Pathfinding
             }
 
             return retList;
+
         }
 
-        private Node GetNeighborNode(Node adjPos, bool searchTopDown, Node currentNodePos)
+        private Node GetNeighbourNode(Node adjPos, bool searchTopDown, Node currentNodePos)
         {
-            //This is the meat. We can add all of the checks we need to tweak the alg.
-            //First, the usual A* stuff.
+            //this is where the meat of it is
+            //We can add all the checks we need here to tweak the algorythm to our heart's content
+            //but first let's start from the the usual stuff you'll see in A*
 
             Node retVal = null;
 
-            //Let's take the node from the adjacent positions we passed
+            //let's take the node from the adjacent positions we passed
             Node node = GetNode(adjPos.x, adjPos.y, adjPos.z);
 
-            //if it's not null and we can walk on it...
-            if(node != null && node.isWalkable)
+            //if it's not null and we can walk on it
+            if (node != null && node.isWalkable)
             {
-                //We can use this node.
+                //we can use that node
                 retVal = node;
-            }//Otherwise...
-            else if(searchTopDown) //and we want 3d A*
+            }//if not
+            else if (searchTopDown)//and we want to have 3d A* 
             {
-                //Then look at what the node has under it
+                //then look what the adjacent node have under him
                 adjPos.y -= 1;
-                Node bottomBlock = gridBase.GetNode(adjPos.x, adjPos.y, adjPos.z);
-                
-                //If there is a bottom block and we can walk on it
-                if(bottomBlock != null && bottomBlock.isWalkable)
+                Node bottomBlock = GetNode(adjPos.x, adjPos.y, adjPos.z);
+
+                //if there is a bottom block and we can walk on it
+                if (bottomBlock != null && bottomBlock.isWalkable)
                 {
-                    //We can return that.
-                    retVal = bottomBlock;
+                    retVal = bottomBlock;// we can return that
                 }
                 else
                 {
-                    //Otherwise, let's look up instead.
+                    //otherwise, we look what it has on top of it
                     adjPos.y += 2;
-                    Node topBlock = gridBase.GetNode(adjPos.x, adjPos.y, adjPos.z);
-
-                    //Same as above.
-                    if(topBlock != null && topBlock.isWalkable)
+                    Node topBlock = GetNode(adjPos.x, adjPos.y, adjPos.z);
+                    if (topBlock != null && topBlock.isWalkable)
                     {
                         retVal = topBlock;
                     }
                 }
             }
 
-            //If the node is diagonal to the current node then we check it's neighbors.
-            //To move diagonally, we need all 4 nodes walkable.
+            //if the node is diagonal to the current node then check the neighbouring nodes
+            //so to move diagonally, we need to have 4 nodes walkable
             int originalX = adjPos.x - currentNodePos.x;
             int originalZ = adjPos.z - currentNodePos.z;
 
-            if(Mathf.Abs(originalX) == 1 && Mathf.Abs(originalZ) == 1)
+            if (Mathf.Abs(originalX) == 1 && Mathf.Abs(originalZ) == 1)
             {
-                //The first block is originalX, 0 and the second to check is 0, originalZ.
-                //Both need to be walkable.
-                Node neighbor1 = gridBase.GetNode(currentNodePos.x + originalX, currentNodePos.y, currentNodePos.z + originalZ);
-                if(neighbor1 == null || !neighbor1.isWalkable)
+                // the first block is originalX, 0 and the second to check is 0, originalZ
+                //They need to be pathfinding walkable
+                Node neighbour1 = GetNode(currentNodePos.x + originalX, currentNodePos.y, currentNodePos.z);
+                if (neighbour1 == null || !neighbour1.isWalkable)
                 {
                     retVal = null;
                 }
 
-                Node neighbor2 = gridBase.GetNode(currentNodePos.x, currentNodePos.y, currentNodePos.z + originalZ);
-                if (neighbor2 == null || !neighbor2.isWalkable)
+                Node neighbour2 = GetNode(currentNodePos.x, currentNodePos.y, currentNodePos.z + originalZ);
+                if (neighbour2 == null || !neighbour2.isWalkable)
                 {
                     retVal = null;
-                }   
+                }
             }
 
-            //Here we can add additional checks.
+            //and here's where we can add even more additional checks
             if (retVal != null)
             {
-                //EX. Do not approach any nodes from the left
-                /*if(node.x < currentNodePos.x)
-                {
+                //Example, do not approach a node from the left
+                /*if(node.x > currentNodePos.x) {
                     node = null;
                 }*/
             }
@@ -262,24 +264,25 @@ namespace Pathfinding
             {
                 n = gridBase.GetNode(x, y, z);
             }
-
             return n;
         }
 
         private int GetDistance(Node posA, Node posB)
         {
-            //We find the distance between each node.
+            //We find the distance between each node
+            //not much to explain here
 
             int distX = Mathf.Abs(posA.x - posB.x);
-            int distY = Mathf.Abs(posA.y - posB.y);
             int distZ = Mathf.Abs(posA.z - posB.z);
+            int distY = Mathf.Abs(posA.y - posB.y);
 
-            if(distX > distZ)
+            if (distX > distZ)
             {
                 return 14 * distZ + 10 * (distX - distZ) + 10 * distY;
             }
 
             return 14 * distX + 10 * (distZ - distX) + 10 * distY;
         }
+
     }
 }

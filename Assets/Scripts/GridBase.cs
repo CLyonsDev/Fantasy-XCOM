@@ -1,6 +1,6 @@
-﻿using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace GridMaster
 {
@@ -11,12 +11,12 @@ namespace GridMaster
         public int maxY = 3;
         public int maxZ = 10;
 
-        //Offset relates to the world positions only.
+        //Offset relates to the world positions only
         public float offsetX = 1;
         public float offsetY = 1;
         public float offsetZ = 1;
 
-        public Node[,,] grid; //Our grid
+        public Node[,,] grid; // our grid
 
         public GameObject gridFloorPrefab;
 
@@ -27,7 +27,7 @@ namespace GridMaster
 
         void Start()
         {
-            //Typical way to create a grid.
+            //The typical way to create a grid
             grid = new Node[maxX, maxY, maxZ];
 
             for (int x = 0; x < maxX; x++)
@@ -36,80 +36,68 @@ namespace GridMaster
                 {
                     for (int z = 0; z < maxZ; z++)
                     {
-                        //Apply the offsets and create the world object for each node.
+                        //Apply the offsets and create the world object for each node
                         float posX = x * offsetX;
                         float posY = y * offsetY;
                         float posZ = z * offsetZ;
+                        GameObject go = Instantiate(gridFloorPrefab, new Vector3(posX, posY, posZ),
+                            Quaternion.identity) as GameObject;
+                        //Rename it
+                        go.transform.name = x.ToString() + " " + y.ToString() + " " + z.ToString();
+                        //and parent it under this transform to be more organized
+                        go.transform.parent = transform;
 
-                        //Create our tile object.
-                        GameObject go = (GameObject)Instantiate(gridFloorPrefab, new Vector3(posX, posY, posZ), Quaternion.identity);
-
-                        //Rename it...
-                        go.transform.name = string.Format("({0}, {1}, {2})", x.ToString(), y.ToString(), z.ToString());
-                        //And parent it under this transform to be more organized.
-                        go.transform.SetParent(this.transform);
-
-                        //Create a new node and set it's values.
+                        //Create a new node and update it's values
                         Node node = new Node();
                         node.x = x;
                         node.y = y;
                         node.z = z;
                         node.worldObject = go;
 
+                        //BoxCastAll is only Unity 5.3+ remove this and it will play on all versions 5+
+                        //in theory it should play with every Unity version, but i haven't tested it
                         RaycastHit[] hits = Physics.BoxCastAll(new Vector3(posX, posY, posZ), new Vector3(1, 0, 1), Vector3.up);
 
                         for (int i = 0; i < hits.Length; i++)
                         {
-                            if (!hits[i].transform.GetComponentInChildren<Collider>().isTrigger)
-                            {
-                                node.isWalkable = false;
-                            }
+                            node.isWalkable = false;
                         }
 
-                        if(!node.isWalkable)
-                        {
-                            node.worldObject.GetComponentInChildren<Renderer>().material.color = new Color(1.0f, 0f, 0f, 1.0f);
-                        }
-
-                        //Then place it in the grid.
+                        //then place it to the grid
                         grid[x, y, z] = node;
                     }
                 }
             }
         }
 
-        //Quick way to visualize the path
+        //Just a quick and dirty way to visualize the path
         public bool start;
         void Update()
         {
             if (start)
             {
                 start = false;
+                //Create the new pathfinder class
+                // Pathfinding.Pathfinder path = new Pathfinding.Pathfinder();
 
-                //Create a new pathfinder class.
-                //Pathfinding.Pathfinder path = new Pathfinding.Pathfinder();
-
-                //To test the avoidance, we're going to make a node unwalkable.
+                //to test the avoidance, just make a node unwalkable
                 grid[1, 0, 1].isWalkable = false;
 
-                //Pass the target nodes
+                //pass the target nodes
                 Node startNode = GetNodeFromVector3(startNodePosition);
                 Node end = GetNodeFromVector3(endNodePosition);
 
                 //path.startPosition = startNode;
                 //path.endPosition = end;
 
-                //Find the path...
+                //find the path
                 //List<Node> p = path.FindPath();
-
-                //and disable the world object for each node we are passing over.
                 startNode.worldObject.SetActive(false);
 
                 for (int i = 0; i < agents; i++)
                 {
                     Pathfinding.PathfindMaster.GetInstance().RequestPathfind(startNode, end, ShowPath);
                 }
-                
             }
         }
 
@@ -120,18 +108,20 @@ namespace GridMaster
                 n.worldObject.SetActive(false);
             }
 
-            Debug.Log("Agent Complete.");
+            //Debug.Log("agent complete");
         }
 
         public Node GetNode(int x, int y, int z)
         {
-            //Used to get a node from a grid. If it's greater than all the max values we have, then it will return null.
+            //Used to get a node from a grid,
+            //If it's greater than all the maximum values we have
+            //then it's going to return null
 
             Node retVal = null;
 
-            if(x < maxX && x >=0 &&
-               y >= 0 && y < maxY &&
-               z >= 0 && z < maxZ)
+            if (x < maxX && x >= 0 &&
+                y >= 0 && y < maxY &&
+                z >= 0 && z < maxZ)
             {
                 retVal = grid[x, y, z];
             }
@@ -149,7 +139,7 @@ namespace GridMaster
             return retVal;
         }
 
-        #region Singleton Shenanigans
+        //Singleton
         public static GridBase instance;
         public static GridBase GetInstance()
         {
@@ -160,6 +150,5 @@ namespace GridMaster
         {
             instance = this;
         }
-        #endregion
     }
 }
