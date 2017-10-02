@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace GridMaster
 {
@@ -16,7 +17,7 @@ namespace GridMaster
 
         public float fCost
         {
-            get //the fCost is the gCost+hCost so we can get it directly this way
+            get //The fCost is the gCost+hCost. We can use this to get it easily.
             {
                 return gCost + hCost;
             }
@@ -25,15 +26,14 @@ namespace GridMaster
         public Node parentNode;
         public bool isWalkable = true;
 
-        //Reference to the world object so we can have the world position of the node among other things
+        //Reference to the world object so we can have the world position of the node... among other things.
         public GameObject worldObject;
 
-        //Types of nodes we can have, we will use this later on a case by case examples
         public NodeType nodeType;
         public enum NodeType
         {
             ground,
             air
-        }
+        };
     }
 }
